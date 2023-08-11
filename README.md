@@ -57,3 +57,16 @@ npm run test:e2e # or `npm run test:e2e:ci` for headless testing
 ```sh
 npm run lint
 ```
+
+### Deploy
+
+```sh
+sam deploy --s3-bucket sam-resources-bucket --profile admin
+```
+Deploy/Update the supporting infrastructure defined in the template.yml. Deployment is achieved using SAM. Even though there are no "serverless" resources in the template, sam provides regular resource status as CloudFormation does its thing.
+
+```sh
+aws s3 sync dist/ s3://bgagnon-mortgage-calculator-bucket --profile admin
+```
+
+Publish the latest build to S3, making it available to end users.

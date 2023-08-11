@@ -7,7 +7,7 @@ import MortgageDetails from "@/components/MortgageDetails.vue";
 <template>
   <div class="header-block"></div>
 
-  <div class="container">
+  <div class="container app">
     <div class="row">
       <h1 class="col-12 d-flex justify-content-center" id="mortgage-calculator-header">Mortgage Calculator</h1>
     </div>
@@ -46,7 +46,6 @@ import MortgageDetails from "@/components/MortgageDetails.vue";
 <style scoped>
 .header-block {
   height: 50px;
-  margin-bottom: 20px;
   background-color: #344955;
 }
 
@@ -57,6 +56,11 @@ header {
 .logo {
   display: block;
   margin: 0 auto 2rem;
+}
+
+.app {
+  padding-top: 20px;
+  background-color: whitesmoke;
 }
 
 /*@media (min-width: 1024px) {*/

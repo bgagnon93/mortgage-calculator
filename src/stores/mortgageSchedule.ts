@@ -24,22 +24,32 @@ export const useMortgageStore = defineStore("mortgage", () => {
     // Row 4 is the amount of interest paid for the given month.
     // Row 5 is the accumulated spend on the mortgage.
     const schedules = ref([] as number[][][])
-    const datasets = ref([{
-        label: "",
-        data: [],
-        backgroundColor: "#4A6572",
-        borderColor: "#4A6572",
-        pointRadius: 0
-    }] as DataSet[])
+    const datasets = ref([] as DataSet[])
+    const savedDataset = ref([] as DataSet[])
 
-    const minimum_payment = ref(0)
-    const minimum_payment_formatted = ref("0")
+    const minimum_payments = ref([0] as number[])
+    const property_taxes= ref([0] as number[])
+
+    const sliderValue = ref(60)
+
+    function calcPropertyTaxes(listingPrice: number, millRate: number) {
+        return listingPrice * 0.7 /1000 * millRate
+    }
+
+    function calcMinimumPayment(principal: number, monthly_rate: number, months: number) {
+        const p = principal
+        const r = monthly_rate
+        const m = months
+        return p * r * (1 + r) ** m / ((1 + r) ** m - 1)
+    }
 
 
-    function calcSchedule(plan: { [id: number]: FinancePlan },
-                          principal: number,
-                          accumulated: number,
-                          month: number) {
+    function calcSchedule(
+        plan: { [id: number]: FinancePlan },
+        principal: number,
+        accumulated: number,
+        month: number
+    ): number[][] {
 
         let months_array = [] as number[]
         let principal_array = [] as number[]
@@ -54,7 +64,7 @@ export const useMortgageStore = defineStore("mortgage", () => {
         let m = plan[month].payback_years * 12
         let extra = plan[month].prepay
 
-        minimum_payment.value = p * r * (1 + r) ** m / ((1 + r) ** m - 1)
+        let minimum_payment = calcMinimumPayment(p, r, m)
         let interest, minimum_repayment, repayment = 0
         // accumulated += interest + repayment
         // p -= repayment
@@ -69,7 +79,7 @@ export const useMortgageStore = defineStore("mortgage", () => {
             }
 
             if (p < 0) {
-                repayment = minimum_payment.value + p
+                repayment = minimum_payment + p
                 interest = 0
                 p = 0
                 accumulated += repayment
@@ -84,7 +94,7 @@ export const useMortgageStore = defineStore("mortgage", () => {
             }
 
             interest = p * r
-            minimum_repayment = minimum_payment.value - interest
+            minimum_repayment = minimum_payment - interest
             repayment = minimum_repayment + extra
 
             accumulated += interest + repayment
@@ -100,48 +110,78 @@ export const useMortgageStore = defineStore("mortgage", () => {
             month += 1
         }
 
-        schedules.value.push([months_array, principal_array, repayment_array, interest_array, accumulation_array])
-        datasets.value = [] as DataSet[]
+        // return [months_array, principal_array, repayment_array, interest_array, accumulation_array]
+        return [months_array, principal_array, repayment_array, interest_array, accumulation_array]
+        // minimum_payments.value[0] = minimum_payment
+        // schedules.value.unshift([months_array, principal_array, repayment_array, interest_array, accumulation_array])
+
+        // updateDatasets()
+    }
+
+    function saveDataset() {
+        schedules.value.unshift(schedules.value[0])
+        minimum_payments.value.unshift(minimum_payments.value[0])
+        property_taxes.value.unshift(property_taxes.value[0])
+
+        savedDataset.value = [
+            {
+                label: "Principal",
+                data: schedules.value[0][1],
+                backgroundColor: "#FF0000",
+                borderColor: "#FF0000",
+                pointRadius: 0
+            },
+            {
+                label: "Accumulated",
+                data: schedules.value[0][4],
+                backgroundColor: "#FF0000",
+                borderColor: "#FF0000",
+                pointRadius: 0
+            }
+        ]
+    }
+
+    function unsaveDataset(index: number) {
+        console.log(index)
+        schedules.value.splice(index, 1)
+        minimum_payments.value.splice(index, 1)
+        property_taxes.value.splice(index, 1)
+        savedDataset.value.splice((index - 1) * 2, 2)
+        updateDatasets()
+        // datasets.value.splice(index, 1)
+    }
+
+    function updateDatasets() {
         datasets.value = [
             {
                 label: "Principal",
-                data: principal_array,
+                data: schedules.value[0][1],
                 backgroundColor: "#4A6572",
                 borderColor: "#4A6572",
                 pointRadius: 0
             },
             {
                 label: "Accumulated",
-                data: accumulation_array,
+                data: schedules.value[0][4],
                 backgroundColor: "#4A6572",
                 borderColor: "#4A6572",
                 pointRadius: 0
-            }
+            },
+            ...savedDataset.value
         ]
-        // datasets.value.push(
-        //     {
-        //         label: "Principal",
-        //         data: principal_array,
-        //         backgroundColor: "rgb(75, 192, 192)",
-        //         borderColor: "rgb(75, 192, 192)",
-        //         pointRadius: 0
-        //     }
-        // )
-        // datasets.value.push(
-        //     {
-        //         label: "Accumulated",
-        //         data: accumulation_array,
-        //         backgroundColor: "rgb(75, 192, 192)",
-        //         borderColor: "rgb(75, 192, 192)",
-        //         pointRadius: 0
-        //     }
-        // )
     }
 
     return {
         schedules,
         datasets,
-        minimum_payment,
-        minimum_payment_formatted,
-        calcSchedule};
+        savedDataset,
+        minimum_payments,
+        property_taxes,
+        sliderValue,
+        calcSchedule,
+        calcPropertyTaxes,
+        saveDataset,
+        unsaveDataset,
+        updateDatasets
+    };
 });

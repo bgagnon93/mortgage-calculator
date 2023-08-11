@@ -8,37 +8,69 @@
               <thead>
               <tr>
                 <th scope="col"></th>
-                <th scope="col">Current</th>
-                <th scope="col">Saved</th>
+                <th v-for="schedule in mortgageStore.schedules.slice(0,1)" scope="col"><button type="button" class="btn btn-outline-secondary" @click="mortgageStore.saveDataset()">SAVE</button></th>
+                <th v-if="mortgageStore.schedules.length > 1" v-for="(schedule, index) in mortgageStore.schedules.slice(1)" scope="col"><button type="button" class="btn btn-outline-secondary" @click="mortgageStore.unsaveDataset(index + 1)">UNSAVE</button></th>
+                <th scope="col"></th>
               </tr>
               </thead>
               <tbody>
               <tr>
-                <th scope="row">Minimum Payment</th>
-                <td>{{mortgageStore.minimum_payment_formatted}}</td>
-                <td>@mdo</td>
+                <th scope="row">Mortgage Payment</th>
+                <td v-for="minimum_payment in mortgageStore.minimum_payments">{{currencyFormatter.format(minimum_payment)}}</td>
+              </tr>
+              <tr>
+                <th scope="row">Property Taxes</th>
+                <td v-for="tax in mortgageStore.property_taxes">{{currencyFormatter.format(tax / 12)}}</td>
               </tr>
               <tr>
                 <th scope="row">Accumulated</th>
-                <td>Thornton</td>
-                <td>@fat</td>
+                <td v-for="schedule in mortgageStore.schedules">{{currencyFormatterNoChange.format(schedule[4].slice(-1)[0])}}</td>
+              </tr>
+<!--              <tr>-->
+<!--                <th scope="row">Repaid</th>-->
+<!--                <td>todo</td>-->
+<!--                <td>todo</td>-->
+<!--              </tr>-->
+             <!-- <tr>
+               <th scope="row">% Interest (5-Yr)</th>
+               <td v-for="schedule in mortgageStore.schedules">{{parseFloat(schedule[2].slice(0,60).reduce((sum, n) => sum += n, 0)).toFixed(2)}}%</td>
+             </tr> -->
+              </tbody>
+              <thead>
+              <tr>
+                <th scope="col">
+                  <div class="slidecontainer">
+                  <input type="range" min="1" max="360" v-model="mortgageStore.sliderValue" class="slider" id="myRange">
+                  {{parseFloat(mortgageStore.sliderValue / 12).toFixed(1)}}
+                </div>
+                </th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr>
+                <th scope="row">Principal</th>
+                <td v-for="schedule in mortgageStore.schedules">{{currencyFormatterNoChange.format(mortgageStore.sliderValue >= schedule[1].length ? 0 : schedule[1][mortgageStore.sliderValue-1])}}</td>
               </tr>
               <tr>
                 <th scope="row">Repaid</th>
-                <td>the Bird</td>
-                <td>@twitter</td>
+                <td v-for="schedule in mortgageStore.schedules">{{currencyFormatterNoChange.format(schedule[2].slice(0,mortgageStore.sliderValue).reduce((sum, n) => sum + n, 0))}}</td>
               </tr>
               <tr>
-                <th scope="row">Percent Interest</th>
-                <td>the Bird</td>
-                <td>@twitter</td>
+                <th scope="row">Interest</th>
+                <td v-for="schedule in mortgageStore.schedules">{{currencyFormatterNoChange.format(schedule[3].slice(0,mortgageStore.sliderValue).reduce((sum, n) => sum + n, 0))}}</td>
               </tr>
+              <!-- <tr>
+                <th scope="row">Total</th>
+                <td v-for="schedule in mortgageStore.schedules">{{currencyFormatterNoChange.format(schedule[4].slice(-1)[0])}}</td>
+              </tr> -->
               </tbody>
             </table>
-<!--            <div class="number">PLAN 1</div>-->
-<!--            <div class="number">Minimum Monthly Payment: {{mortgageStore.minimum_payment_formatted}}</div>-->
           </div>
         </div>
+
+
       </div>
     </div>
     <div >
@@ -54,6 +86,7 @@
 
 <script setup>
 import {useMortgageStore} from "../stores/mortgageSchedule";
+import {currencyFormatter, currencyFormatterNoChange} from '../utils/utils'
 
 const mortgageStore = useMortgageStore()
 </script>
@@ -65,7 +98,7 @@ const mortgageStore = useMortgageStore()
 
 .poker-card {
   padding: 5px;
-  height: 800px;
+  height: 500px;
   background-color: #ffffff;
   border-radius: 10px;
   border: 1px #282c34;

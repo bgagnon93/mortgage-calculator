@@ -14,7 +14,7 @@
       <div class="col-lg-2 col-sm-4 col-6 form-group">
         <label class="form-label">Percent Down:</label>
         <div class="input-group">
-          <input id="percent-down-input" v-model.lazy="percentDown" @blur="runTheNumbers()" type="number"
+          <input id="percent-down-input" v-model.lazy="percentDown" @blur="runTheNumbers()" :readonly="true" type="number"
                  class="form-control percent-input"/>
           <span class="input-group-text" id="basic-addon1">%</span>
         </div>
@@ -40,13 +40,13 @@
       </div>
 
     </div>
-<!--    <div class="row">-->
-<!--      <div class="col-lg-5"></div>-->
-<!--      <div class="col-lg-2">-->
-<!--        <button type="button" class="btn btn-primary" @click="runTheNumbers()">Calculate</button>-->
-<!--      </div>-->
-<!--      <div class="col-lg-5"></div>-->
-<!--    </div>-->
+   <!-- <div class="row">
+     <div class="col-lg-5"></div>
+     <div class="col-lg-2">
+       <button type="button" class="btn btn-primary" @click="mortgageStore.saveDataset()">SAVE SCHEDULE</button>
+     </div>
+     <div class="col-lg-5"></div>
+   </div> -->
 <!--    <div class="row">-->
 <!--      <div class="col-lg-5"></div>-->
 <!--      <div class="col-lg-2">-->
@@ -59,19 +59,18 @@
 
 <script setup lang="ts">
 import CurrencyInput from './reusables/CurrencyInput.vue'
-import {currencyFormatter} from '../utils/utils'
 import {ref} from "vue";
 import {useMortgageStore} from '../stores/mortgageSchedule'
 const mortgageStore = useMortgageStore()
 
-const listingPrice = ref(330000)
-const downPayment = ref(66000)
+const listingPrice = ref(500000)
+const downPayment = ref(100000)
 const percentDown = ref(20)
-const term = ref(15)
+const term = ref(30)
 const rate = ref(6)
 const prepayment = ref(0)
 
-calculateMinimumPayment()
+// calculateMinimumPayment()
 
 function calculatePercentDown() {
   percentDown.value = downPayment.value / listingPrice.value * 100
@@ -83,7 +82,6 @@ function calculateDownPayment() {
 
 function runTheNumbers() {
   calculatePercentDown()
-  calculateMinimumPayment()
   let plan_1 = {
     0: {
       "rate_yearly": rate.value / 100,
@@ -96,16 +94,19 @@ function runTheNumbers() {
     //   "prepay": 500
     // }
   }
+  let millRate = 50
 
-  mortgageStore.calcSchedule(plan_1, listingPrice.value - downPayment.value, downPayment.value, 0)
+  mortgageStore.schedules[0] = mortgageStore.calcSchedule(plan_1, listingPrice.value - downPayment.value, downPayment.value, 0)
+  mortgageStore.minimum_payments[0] = calculateMinimumPayment()
+  mortgageStore.property_taxes[0] = mortgageStore.calcPropertyTaxes(listingPrice.value, millRate)
+  mortgageStore.updateDatasets()
 }
 
 function calculateMinimumPayment() {
   let p = listingPrice.value - downPayment.value
   let r = rate.value / (12 * 100)
   let m = term.value * 12
-  mortgageStore.minimum_payment = p * r * (1 + r) ** m / ((1 + r) ** m - 1)
-  mortgageStore.minimum_payment_formatted = currencyFormatter.format(mortgageStore.minimum_payment)
+  return p * r * (1 + r) ** m / ((1 + r) ** m - 1)
 }
 
 runTheNumbers()

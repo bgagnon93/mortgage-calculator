@@ -31,9 +31,9 @@ const chartData = computed(() => ({
 const chartOptions = computed(() => ({
   responsive: true,
   scales: {
-    x: {
-      max: 180,
-    },
+    // x: {
+    //   max: 360,
+    // },
     y: {
       min: 0
     }
